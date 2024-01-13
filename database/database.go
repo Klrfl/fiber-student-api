@@ -24,11 +24,11 @@ func Init() {
 	port := os.Getenv("DB_PORT")
 	dbname := os.Getenv("DB_NAME")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", user, password, host, port, dbname)
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname)
 	DB, err = sql.Open("postgres", connStr)
 
-	if err != nil {
-		panic("failed to connect to database")
+	if err := DB.Ping(); err != nil {
+		log.Fatal(err)
 	}
 	log.Println("successfully connected to database")
 }

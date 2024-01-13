@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fiber-student-api/database"
+	"fiber-student-api/router"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,10 +14,7 @@ func main() {
 	database.Init()
 
 	app := fiber.New()
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("halo")
-	})
+	router.SetupRoutes(app)
 
 	app.Listen(":8080")
 }

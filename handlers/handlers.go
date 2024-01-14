@@ -3,7 +3,9 @@ package handlers
 import (
 	"database/sql"
 	"fiber-student-api/database"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -77,4 +79,51 @@ func CreateNewStudent(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"err": false, "message": "student successfully created"})
+}
+
+func UpdateStudentData(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	id := c.Params("id")
+	studentId, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "error processing id"})
+	}
+	student := new(Student)
+	if err := c.BodyParser(student); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "messsage": "something wrong with your payload."})
+	}
+
+	// check request body params one by one
+	// surely there's a better way to do this
+	query := `UPDATE students SET `
+	queryParts := make([]string, 0, 4)
+	args := make([]interface{}, 0, 4)
+
+	if student.Name != "" {
+		queryParts = append(queryParts, `name = '%s'`)
+		args = append(args, student.Name)
+	}
+	if student.Major != "" {
+		queryParts = append(queryParts, `major = '%s'`)
+		args = append(args, student.Major)
+	}
+	if student.Grade != 0 {
+		queryParts = append(queryParts, `grade = %d`)
+		args = append(args, student.Grade)
+	}
+
+	query += strings.Join(queryParts, ", ") + ` WHERE id = '%s'`
+	args = append(args, studentId)
+
+	_, err = database.DB.Exec(fmt.Sprintf(query, args...))
+
+	if err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "Error when updating student data",
+		})
+	}
+
+	return c.JSON(fiber.Map{"err": false, "message": "Student successfully updated"})
 }

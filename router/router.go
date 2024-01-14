@@ -12,4 +12,5 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/", handlers.CreateNewStudent)
 
 	api.Get("/:id", handlers.GetStudentByID)
+	api.Patch("/:id", handlers.UpdateStudentData)
 }

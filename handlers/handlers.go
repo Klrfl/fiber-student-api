@@ -40,8 +40,7 @@ func GetAllStudents(c *fiber.Ctx) error {
 }
 
 func GetStudentByID(c *fiber.Ctx) error {
-	id := c.Params("id")
-	studentId, err := uuid.Parse(id)
+	studentId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "message": "error processing ID"})
 	}
@@ -83,8 +82,7 @@ func CreateNewStudent(c *fiber.Ctx) error {
 
 func UpdateStudentData(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	id := c.Params("id")
-	studentId, err := uuid.Parse(id)
+	studentId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "error processing id"})
 	}
@@ -126,4 +124,20 @@ func UpdateStudentData(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"err": false, "message": "Student successfully updated"})
+}
+
+func DeleteStudent(c *fiber.Ctx) error {
+	studentId, err := uuid.Parse(c.Params("id"))
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": false, "message": "cannot process student ID"})
+	}
+
+	_, err = database.DB.Exec("DELETE FROM students WHERE id=$1", studentId)
+	if err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "Error when deleting student from database"})
+	}
+
+	return c.JSON(fiber.Map{"err": false, "message": "Student successfully deleted"})
 }

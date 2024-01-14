@@ -13,4 +13,5 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Get("/:id", handlers.GetStudentByID)
 	api.Patch("/:id", handlers.UpdateStudentData)
+	api.Delete("/:id", handlers.DeleteStudent)
 }

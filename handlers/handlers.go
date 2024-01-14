@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fiber-student-api/database"
 	"log"
 
@@ -34,6 +35,24 @@ func GetAllStudents(c *fiber.Ctx) error {
 		"err":  false,
 		"data": students,
 	})
+}
+
+func GetStudentByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	studentId, err := uuid.Parse(id)
+	if err != nil {
+		return c.JSON(fiber.Map{"err": true, "message": "error processing ID"})
+	}
+
+	var student Student
+	row := database.DB.QueryRow("SELECT * FROM students WHERE id=$1", studentId)
+
+	switch err = row.Scan(&student.Id, &student.Name, &student.Major, &student.Grade); err {
+	case sql.ErrNoRows:
+		return c.JSON(fiber.Map{"err": false, "message": "Student not found"})
+	}
+
+	return c.JSON(fiber.Map{"err": false, "data": student})
 }
 
 func CreateNewStudent(c *fiber.Ctx) error {

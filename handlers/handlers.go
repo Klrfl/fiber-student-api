@@ -41,7 +41,7 @@ func GetStudentByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	studentId, err := uuid.Parse(id)
 	if err != nil {
-		return c.JSON(fiber.Map{"err": true, "message": "error processing ID"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "message": "error processing ID"})
 	}
 
 	var student Student
@@ -49,10 +49,12 @@ func GetStudentByID(c *fiber.Ctx) error {
 
 	switch err = row.Scan(&student.Id, &student.Name, &student.Major, &student.Grade); err {
 	case sql.ErrNoRows:
-		return c.JSON(fiber.Map{"err": false, "message": "Student not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"err": false, "message": "Student not found"})
+	case nil:
+		return c.JSON(fiber.Map{"err": false, "data": student})
+	default:
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "sorry we didn't know what happened"})
 	}
-
-	return c.JSON(fiber.Map{"err": false, "data": student})
 }
 
 func CreateNewStudent(c *fiber.Ctx) error {
@@ -60,7 +62,7 @@ func CreateNewStudent(c *fiber.Ctx) error {
 	student := new(Student)
 
 	if err := c.BodyParser(student); err != nil {
-		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"err": true, "message": "Something wrong with your payload."})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "message": "Something wrong with your payload."})
 	}
 
 	query := "INSERT INTO students(id, name, major, grade) VALUES($1, $2, $3, $4)"
@@ -74,5 +76,5 @@ func CreateNewStudent(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(fiber.Map{"err": false, "message": "student successfully created"})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"err": false, "message": "student successfully created"})
 }

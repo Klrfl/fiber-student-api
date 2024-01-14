@@ -35,3 +35,25 @@ func GetAllStudents(c *fiber.Ctx) error {
 		"data": students,
 	})
 }
+
+func CreateNewStudent(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	student := new(Student)
+
+	if err := c.BodyParser(student); err != nil {
+		return c.Status(fiber.StatusNotAcceptable).JSON(fiber.Map{"err": true, "message": "Something wrong with your payload."})
+	}
+
+	query := "INSERT INTO students(id, name, major, grade) VALUES($1, $2, $3, $4)"
+
+	_, err := database.DB.Exec(query, uuid.New(), student.Name, student.Major, student.Grade)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"err":     true,
+			"message": "Error when inserting new student data into database",
+		})
+	}
+
+	return c.JSON(fiber.Map{"err": false, "message": "student successfully created"})
+}

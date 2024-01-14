@@ -9,4 +9,5 @@ import (
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("api")
 	api.Get("/", handlers.GetAllStudents)
+	api.Post("/", handlers.CreateNewStudent)
 }

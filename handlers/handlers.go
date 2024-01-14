@@ -18,8 +18,8 @@ type Student struct {
 	Grade int       `json:"grade"`
 }
 
-func GetAllStudents(c *fiber.Ctx) error {
-	var students []Student
+func GetStudents(c *fiber.Ctx) error {
+	students := []Student{}
 
 	rows, err := database.DB.Query("SELECT * FROM students")
 	if err != nil {
@@ -50,7 +50,7 @@ func GetStudentByID(c *fiber.Ctx) error {
 
 	switch err = row.Scan(&student.Id, &student.Name, &student.Major, &student.Grade); err {
 	case sql.ErrNoRows:
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"err": false, "message": "Student not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"err": false, "message": fmt.Sprintf("Student with ID %s not found", studentId)})
 	case nil:
 		return c.JSON(fiber.Map{"err": false, "data": student})
 	default:
@@ -86,13 +86,14 @@ func UpdateStudentData(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "error processing id"})
 	}
-	student := new(Student)
+	var student Student
 	if err := c.BodyParser(student); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "messsage": "something wrong with your payload."})
 	}
 
 	// check request body params one by one
 	// surely there's a better way to do this
+	// source: https://stackoverflow.com/questions/38206479/golang-rest-patch-and-building-an-update-query
 	query := `UPDATE students SET `
 	queryParts := make([]string, 0, 4)
 	args := make([]interface{}, 0, 4)

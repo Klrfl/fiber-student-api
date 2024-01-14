@@ -8,7 +8,7 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("api")
-	api.Get("/", handlers.GetAllStudents)
+	api.Get("/", handlers.GetStudents)
 	api.Post("/", handlers.CreateNewStudent)
 
 	api.Get("/:id", handlers.GetStudentByID)

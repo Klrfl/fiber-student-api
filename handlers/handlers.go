@@ -20,8 +20,16 @@ type Student struct {
 
 func GetStudents(c *fiber.Ctx) error {
 	students := []Student{}
+	var rows *sql.Rows
+	var err error
 
-	rows, err := database.DB.Query("SELECT * FROM students")
+	nameQuery := c.Query("name")
+	if nameQuery != "" {
+		rows, err = database.DB.Query("SELECT * FROM students WHERE name ILIKE $1", "%"+nameQuery+"%")
+	} else {
+		rows, err = database.DB.Query("SELECT * FROM students")
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}

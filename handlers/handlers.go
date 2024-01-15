@@ -55,6 +55,7 @@ func GetStudents(c *fiber.Ctx) error {
 func GetStudentByID(c *fiber.Ctx) error {
 	studentId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
+		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "message": "error processing ID"})
 	}
 
@@ -67,6 +68,7 @@ func GetStudentByID(c *fiber.Ctx) error {
 	case nil:
 		return c.JSON(fiber.Map{"err": false, "data": student})
 	default:
+		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "sorry we didn't know what happened"})
 	}
 }
@@ -84,6 +86,7 @@ func CreateNewStudent(c *fiber.Ctx) error {
 	_, err := database.DB.Exec(query, uuid.New(), student.Name, student.Major, student.Grade)
 
 	if err != nil {
+		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"err":     true,
 			"message": "Error when inserting new student data into database",
@@ -95,12 +98,15 @@ func CreateNewStudent(c *fiber.Ctx) error {
 
 func UpdateStudentData(c *fiber.Ctx) error {
 	c.Accepts("application/json")
+
 	studentId, err := uuid.Parse(c.Params("id"))
 	if err != nil {
+		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"err": true, "message": "error processing id"})
 	}
-	var student Student
+	student := new(Student)
 	if err := c.BodyParser(student); err != nil {
+		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": true, "messsage": "something wrong with your payload."})
 	}
 
@@ -144,6 +150,7 @@ func DeleteStudent(c *fiber.Ctx) error {
 	studentId, err := uuid.Parse(c.Params("id"))
 
 	if err != nil {
+		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"err": false, "message": "cannot process student ID"})
 	}
 

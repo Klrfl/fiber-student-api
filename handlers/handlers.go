@@ -20,14 +20,19 @@ type Student struct {
 
 func GetStudents(c *fiber.Ctx) error {
 	students := []Student{}
+	studentName := c.Query("name")
+	studentMajor := c.Query("major")
+	studentGrade := c.QueryInt("grade")
+
 	var rows *sql.Rows
 	var err error
 
-	nameQuery := c.Query("name")
-	if nameQuery != "" {
-		rows, err = database.DB.Query("SELECT * FROM students WHERE name ILIKE $1", "%"+nameQuery+"%")
+	query := "SELECT * FROM students WHERE name ILIKE $1 AND major ILIKE $2"
+	if studentGrade != 0 {
+		query += " AND cast(grade as text)=$3"
+		rows, err = database.DB.Query(query, "%"+studentName+"%", "%"+studentMajor+"%", studentGrade)
 	} else {
-		rows, err = database.DB.Query("SELECT * FROM students")
+		rows, err = database.DB.Query(query, "%"+studentName+"%", "%"+studentMajor+"%")
 	}
 
 	if err != nil {

@@ -2,6 +2,7 @@ package router
 
 import (
 	"fiber-student-api/handlers"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
@@ -9,21 +10,22 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-	api := app.Group("api")
-	api.Use(logger.New())
-	api.Get("/", handlers.GetStudents)
-	api.Post("/", handlers.CreateNewStudent)
+	app.Use(logger.New())
+	api := app.Group("api/students")
 
+	api.Get("/", handlers.GetStudents)
 	api.Get("/:id", handlers.GetStudentByID)
 
-	// basic auth middleware
+	adminUsername := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
 	app.Use(basicauth.New(basicauth.Config{
 		Users: map[string]string{
-			"admin": "admin",
-			"jose":  "password",
+			adminUsername: adminPassword,
 		},
 		Unauthorized: func(c *fiber.Ctx) error {
 			c.Set("WWW-authenticate", `Basic realm=localhost`)
+
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"err":     true,
 				"message": "Please provide the right credentials to continue your operation",
@@ -31,6 +33,7 @@ func SetupRoutes(app *fiber.App) {
 		},
 	}))
 
+	api.Post("/", handlers.CreateNewStudent)
 	api.Patch("/:id", handlers.UpdateStudentData)
 	api.Delete("/:id", handlers.DeleteStudent)
 }
